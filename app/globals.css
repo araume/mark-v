@@ -1,26 +1,169 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+/* ---------------------------------------------------------------------------
+   MARK-V design tokens
+   Light mode is the design, not a default. There is intentionally no
+   prefers-color-scheme override — the visual system is built for light.
+--------------------------------------------------------------------------- */
+@theme {
+  /* Ink / structure */
+  --color-ink: #11161a; /* Gunmetal Black  — primary text, anchors  18.2:1 on white */
+  --color-ink-soft: #1a2126; /* Dark Gunmetal   — panels, inverted surfaces        */
+  --color-muted: #66727a; /* Secondary text  — 4.94:1 on white, 4.64:1 on alt   */
+  --color-line: #d9e0e5; /* Hairline borders — decorative only                 */
+  --color-line-strong: #b9c4cc; /* Borders that must read as UI                */
+
+  /* Surfaces */
+  --color-surface: #ffffff;
+  --color-surface-alt: #f6f8fa;
+  --color-surface-wash: #f0f8ff; /* Alice Blue — background tint only          */
+
+  /* Accent.
+     #A9C7D9 from the brand palette is 1.77:1 on white: decoration only, never
+     text and never a focus ring. --color-accent is the interactive value.     */
+  --color-accent: #2f6e93; /* 5.57:1 on white — links, focus, active states    */
+  --color-accent-strong: #1f5f82; /* 6.96:1 — hover                            */
+  --color-accent-soft: #a9c7d9; /* decorative rules, diagram strokes           */
+
+  --font-sans: var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, SFMono-Regular, monospace;
+
+  /* Motion — one easing vocabulary for the whole site */
+  --ease-out-quint: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-overshoot: cubic-bezier(0.34, 1.32, 0.64, 1);
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
+@layer base {
+  html {
+    scroll-behavior: smooth;
+    /* Offset anchor targets so the fixed navbar never covers a heading. */
+    scroll-padding-top: 6rem;
+    -webkit-text-size-adjust: 100%;
+  }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+  body {
+    background-color: var(--color-surface);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-synthesis-weight: none;
+    text-rendering: optimizeLegibility;
+    /* Nothing in the layout may cause a sideways scroll. */
+    overflow-x: clip;
+  }
+
+  /* Visible, high-contrast focus on every interactive element. */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 1px;
+  }
+
+  ::selection {
+    background-color: var(--color-ink);
+    color: var(--color-surface-wash);
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+@layer components {
+  /* Technical metadata type. Used for section numbers, labels, spec keys. */
+  .meta {
+    font-family: var(--font-mono);
+    font-size: 0.6875rem;
+    line-height: 1;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-muted);
+  }
+
+  /* A physical technical panel: hairline border, no shadow, no big radius. */
+  .panel {
+    position: relative;
+    background-color: var(--color-surface);
+    border: 1px solid var(--color-line);
+  }
+
+  /* Corner registration marks — the "machined part" detail. */
+  .panel-marks::before,
+  .panel-marks::after {
+    content: "";
+    position: absolute;
+    width: 5px;
+    height: 5px;
+    border: 1px solid var(--color-accent-soft);
+    pointer-events: none;
+  }
+  .panel-marks::before {
+    top: -1px;
+    left: -1px;
+    border-right: 0;
+    border-bottom: 0;
+  }
+  .panel-marks::after {
+    bottom: -1px;
+    right: -1px;
+    border-left: 0;
+    border-top: 0;
+  }
+
+  /* Blueprint grid, used behind the hero and section breaks. */
+  .grid-field {
+    background-image:
+      linear-gradient(to right, var(--color-line) 1px, transparent 1px),
+      linear-gradient(to bottom, var(--color-line) 1px, transparent 1px);
+    background-size: 72px 72px;
+  }
+}
+
+@layer utilities {
+  /* Entrance animation driven by Reveal.
+     The hidden start state is gated on `scripting: enabled` so that a reader
+     without JavaScript never sees an element stranded at opacity 0 — the
+     observer that would reveal it is exactly the thing that isn't running.
+     Browsers too old to know the `scripting` feature also fall through to
+     fully visible content, which is the correct direction to fail in. */
+  @media (scripting: enabled) {
+    [data-reveal="pending"] {
+      opacity: 0;
+      transform: translate3d(0, var(--reveal-y, 18px), 0) scale(var(--reveal-scale, 1));
+      filter: blur(var(--reveal-blur, 0px));
+    }
+
+    [data-reveal="shown"] {
+      opacity: 1;
+      transform: translate3d(0, 0, 0) scale(1);
+      filter: blur(0);
+      transition:
+        opacity 0.7s var(--ease-out-quint) var(--reveal-delay, 0ms),
+        transform 0.7s var(--ease-out-quint) var(--reveal-delay, 0ms),
+        filter 0.7s var(--ease-out-quint) var(--reveal-delay, 0ms);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-reveal="pending"] {
+      opacity: 1;
+      transform: none;
+      filter: none;
+    }
+    [data-reveal="shown"] {
+      transition: none;
+    }
+  }
 }
