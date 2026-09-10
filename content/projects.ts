@@ -12,6 +12,8 @@ export type Project = {
   solution: string;
   result: string;
   stack: string[];
+  /** Live deployment, when there is one to link. Omitted for shipped binaries. */
+  link?: string;
   /**
    * Screenshot. Replace `image` with a real capture in /public/work and delete
    * `placeholder` — ProjectCard renders the generated visual only while the
@@ -23,63 +25,34 @@ export type Project = {
 
 export const projects: Project[] = [
   {
-    slug: "meridian-operations",
+    slug: "beca-logistics",
     index: "001",
-    name: "Meridian Operations",
-    year: "2025",
-    summary: "Internal operations console for a regional logistics firm.",
+    name: "BECA Logistics",
+    year: "2026",
+    summary: "Landing page for an international freight forwarder.",
     problem:
-      "Dispatch ran on three spreadsheets and a group chat. Nobody could answer where a shipment was without calling someone.",
+      "A forwarder operating since 2009 with nothing an importer could check first — registrations, service scope, and delivery times all lived in phone calls and attachments.",
     solution:
-      "A single operations console: live shipment state, role-scoped access, and an audit trail on every status change.",
+      "A single landing page that puts the whole operation on the record: six service lines, DTI and LTFRB numbers, the carrier network, and a per-region lead-time table, with the quote path always one click away.",
     result:
-      "Dispatch resolution time dropped from hours to minutes, and the group chat stopped being the system of record.",
-    stack: ["Next.js", "TypeScript", "PostgreSQL", "Prisma"],
-    placeholder: "dashboard",
-  },
-  {
-    slug: "kiln-supply",
-    index: "002",
-    name: "Kiln Supply Co.",
-    year: "2025",
-    summary: "Catalogue and quoting site for a materials supplier.",
-    problem:
-      "A 400-item catalogue lived in a PDF that went stale monthly, and every quote request arrived as an unstructured email.",
-    solution:
-      "A fast catalogue with real search and filtering, plus a structured quote builder that produces a clean request.",
-    result:
-      "Quote requests arrive complete, so the sales reply went from a day of back-and-forth to a single message.",
-    stack: ["Next.js", "TypeScript", "Sanity", "Vercel"],
+      "Importers can qualify Beca before they make contact, so the enquiries that arrive start from the route and the cargo rather than from the basics.",
+    stack: ["Next.js", "TypeScript", "Tailwind CSS", "Vercel"],
+    link: "https://beca-modern.vercel.app/",
     placeholder: "storefront",
   },
   {
-    slug: "ledger-reconcile",
-    index: "003",
-    name: "Ledger Reconcile",
-    year: "2024",
-    summary: "Automated reconciliation between a POS system and accounting.",
+    slug: "helport-ai",
+    index: "002",
+    name: "Helport AI",
+    year: "2025",
+    summary: "Computer vision software that reads e-receipts.",
     problem:
-      "Two people spent the first three days of every month manually matching transactions across two systems.",
+      "Every e-receipt had to be opened and read by a person, who then retyped the same three fields into another system — slow, and wrong often enough to matter.",
     solution:
-      "A scheduled pipeline that pulls both ledgers, matches on a tolerance rule, and surfaces only genuine exceptions.",
+      "Desktop software that takes an uploaded e-receipt and extracts the total amount, phone number, and reference number from the image itself, with no template per issuer.",
     result:
-      "Roughly 96% of lines now reconcile untouched. The monthly close takes an afternoon.",
-    stack: ["Python", "PostgreSQL", "Docker", "Cron"],
-    placeholder: "pipeline",
-  },
-  {
-    slug: "atlas-api",
-    index: "004",
-    name: "Atlas API",
-    year: "2024",
-    summary: "Public API and developer console for a property data provider.",
-    problem:
-      "Data was delivered as monthly CSV drops. Customers wanted queries, and support was answering schema questions by hand.",
-    solution:
-      "A versioned REST API with key management, rate limits, and a console where customers test calls against live data.",
-    result:
-      "Integration went from a two-week engagement to same-day self-service.",
-    stack: ["Node.js", "Fastify", "PostgreSQL", "Redis"],
+      "The three fields come off the receipt without anyone reading it, turning a manual transcription step into an upload.",
+    stack: ["Python", "Computer Vision", "OCR"],
     placeholder: "console",
   },
 ];

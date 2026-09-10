@@ -17,7 +17,7 @@ export const techGroups: TechGroup[] = [
   },
   {
     label: "Database",
-    items: ["PostgreSQL", "MongoDB", "Prisma", "Redis"],
+    items: ["PostgreSQL", "MongoDB", "MSSQL", "MySQL"],
     note: "Relational unless there is a reason not to be.",
   },
   {

@@ -15,7 +15,7 @@ export function SelectedWork() {
           index="02"
           label="SELECTED WORK"
           title="Systems built for people who had a real problem."
-          lede="Four recent builds, described by what was wrong before and what changed after."
+          lede="Two recent builds, described by what was wrong before and what changed after."
           align="wide"
         />
 

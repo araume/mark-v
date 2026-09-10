@@ -85,6 +85,26 @@ export function ProjectCard({ project, flip }: { project: Project; flip: boolean
             ))}
           </ul>
         </Reveal>
+
+        {project.link ? (
+          <Reveal delay={310}>
+            <a
+              href={project.link}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="group mt-7 inline-flex items-center gap-2.5 border border-line-strong px-4 py-3 font-mono text-[0.6875rem] tracking-[0.14em] text-ink transition-colors hover:border-ink hover:bg-surface-alt"
+            >
+              VISIT LIVE SITE
+              <span className="sr-only"> — {project.name} (opens in a new tab)</span>
+              <span
+                aria-hidden="true"
+                className="text-accent transition-transform duration-300 group-hover:translate-x-0.5"
+              >
+                ↗
+              </span>
+            </a>
+          </Reveal>
+        ) : null}
       </div>
     </article>
   );
