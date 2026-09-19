@@ -41,9 +41,9 @@ export const projects: Project[] = [
     placeholder: "storefront",
   },
   {
-    slug: "helport-ai",
+    slug: "transcan",
     index: "002",
-    name: "Helport AI",
+    name: "TranScan",
     year: "2025",
     summary: "Computer vision software that reads e-receipts.",
     problem:
