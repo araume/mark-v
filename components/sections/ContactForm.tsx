@@ -1,65 +1,28 @@
 "use client";
 
-import { useId, useState, type FormEvent } from "react";
+import { useId, useRef, useState, type FormEvent } from "react";
+import {
+  BUDGETS,
+  EMPTY_CONTACT,
+  validateContact,
+  type ContactErrors,
+  type ContactFields,
+} from "@/lib/contact";
 
-type Fields = {
-  name: string;
-  email: string;
-  building: string;
-  problem: string;
-  detail: string;
-  budget: string;
-};
-
-type Errors = Partial<Record<keyof Fields, string>>;
-
-const EMPTY: Fields = {
-  name: "",
-  email: "",
-  building: "",
-  problem: "",
-  detail: "",
-  budget: "",
-};
-
-const budgets = [
-  "Not sure yet",
-  "Under $2,000",
-  "$2,000 – $6,000",
-  "$6,000 – $15,000",
-  "$15,000+",
-];
-
-function validate(fields: Fields): Errors {
-  const errors: Errors = {};
-
-  if (!fields.name.trim()) errors.name = "Tell me who I am talking to.";
-
-  const email = fields.email.trim();
-  if (!email) {
-    errors.email = "I need an email address to reply to.";
-  } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email)) {
-    errors.email = "That does not look like a complete email address.";
-  }
-
-  if (!fields.building.trim()) {
-    errors.building = "A few words is enough — a site, a tool, an integration.";
-  }
-
-  if (fields.problem.trim().length < 10) {
-    errors.problem = "Give me a sentence on what is going wrong today.";
-  }
-
-  return errors;
-}
+type Status = "idle" | "sending" | "sent";
 
 export function ContactForm() {
   const id = useId();
-  const [fields, setFields] = useState<Fields>(EMPTY);
-  const [errors, setErrors] = useState<Errors>({});
-  const [submitted, setSubmitted] = useState(false);
+  const [fields, setFields] = useState<ContactFields>(EMPTY_CONTACT);
+  const [errors, setErrors] = useState<ContactErrors>({});
+  const [status, setStatus] = useState<Status>("idle");
+  /** Transport-level failure, as opposed to a per-field problem. */
+  const [failure, setFailure] = useState<string | null>(null);
+  // Honeypot. Kept out of React state so a re-render can never clear what a bot
+  // typed into it, which is the whole point of the trap.
+  const honeypot = useRef<HTMLInputElement>(null);
 
-  const update = (key: keyof Fields) => (value: string) => {
+  const update = (key: keyof ContactFields) => (value: string) => {
     setFields((current) => ({ ...current, [key]: value }));
     // Clear a field's error as soon as the person starts fixing it.
     setErrors((current) =>
@@ -67,29 +30,82 @@ export function ContactForm() {
     );
   };
 
-  function onSubmit(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  /**
+   * Not every field has somewhere to put an error: `budget` is a set of chips
+   * that cannot produce an invalid value from this UI, so a rejection naming it
+   * has no input to focus and no slot to render into. Report whether anything
+   * was actually shown, so the caller can fall back to the banner rather than
+   * leaving the form looking like the button did nothing.
+   */
+  function focusFirst(found: ContactErrors): boolean {
+    for (const key of Object.keys(found) as (keyof ContactFields)[]) {
+      const node = document.getElementById(`${id}-${key}`);
+      if (node) {
+        node.focus();
+        return true;
+      }
+    }
+    return false;
+  }
 
-    const found = validate(fields);
+  async function onSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (status === "sending") return;
+
+    setFailure(null);
+
+    const found = validateContact(fields);
     setErrors(found);
 
     if (Object.keys(found).length > 0) {
       // Move focus to the first problem so keyboard and screen reader users
       // are taken to it rather than having to hunt.
-      const firstKey = (Object.keys(found) as (keyof Fields)[])[0];
-      document.getElementById(`${id}-${firstKey}`)?.focus();
+      focusFirst(found);
       return;
     }
 
-    // FRONTEND ONLY — no transport yet, by design.
-    // The backend step is to POST `fields` to a route handler that forwards to
-    // an email service. Everything below this line already assumes that shape,
-    // so wiring it up means replacing this branch with the request and keeping
-    // the same success/error states.
-    setSubmitted(true);
+    setStatus("sending");
+
+    try {
+      const response = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          ...fields,
+          company: honeypot.current?.value ?? "",
+        }),
+      });
+
+      const payload = await response.json().catch(() => null);
+
+      if (!response.ok) {
+        setStatus("idle");
+
+        // The server revalidates from scratch, so it can reject something the
+        // browser let through. Show those against their own fields.
+        if (payload?.fields) {
+          setErrors(payload.fields);
+          if (focusFirst(payload.fields)) return;
+          // Nothing on screen could show it — say so at form level instead.
+        }
+
+        setFailure(
+          payload?.error ?? "The message did not send. Try again in a moment.",
+        );
+        return;
+      }
+
+      setStatus("sent");
+    } catch {
+      // Offline, DNS, or the connection dropped mid-flight.
+      setStatus("idle");
+      setFailure(
+        "That did not reach the server. Check your connection and try again.",
+      );
+    }
   }
 
-  if (submitted) {
+  if (status === "sent") {
     return (
       <div
         className="panel panel-marks p-8 sm:p-10"
@@ -122,8 +138,10 @@ export function ContactForm() {
         <button
           type="button"
           onClick={() => {
-            setFields(EMPTY);
-            setSubmitted(false);
+            setFields(EMPTY_CONTACT);
+            setErrors({});
+            setFailure(null);
+            setStatus("idle");
           }}
           className="mt-8 border border-line-strong px-5 py-3 font-mono text-[0.6875rem] tracking-[0.14em] text-ink transition-colors hover:border-ink hover:bg-surface-alt"
         >
@@ -132,6 +150,8 @@ export function ContactForm() {
       </div>
     );
   }
+
+  const sending = status === "sending";
 
   return (
     <form noValidate onSubmit={onSubmit} className="panel panel-marks p-6 sm:p-8">
@@ -175,7 +195,7 @@ export function ContactForm() {
           onChange={update("problem")}
           multiline
           rows={3}
-          placeholder="What happens today that shouldn't, or doesn't happen that should."
+          placeholder="What happens today that shouldn’t, or doesn’t happen that should."
         />
       </div>
 
@@ -184,6 +204,7 @@ export function ContactForm() {
           id={`${id}-detail`}
           label="ANYTHING ELSE"
           optional
+          error={errors.detail}
           value={fields.detail}
           onChange={update("detail")}
           multiline
@@ -195,12 +216,12 @@ export function ContactForm() {
       <fieldset className="mt-6">
         <legend className="meta">BUDGET RANGE (OPTIONAL)</legend>
         <div className="mt-3 flex flex-wrap gap-2">
-          {budgets.map((budget) => {
+          {BUDGETS.map((budget) => {
             const active = fields.budget === budget;
             return (
               <label
                 key={budget}
-                className={`cursor-pointer border px-3 py-2 font-mono text-[0.6875rem] tracking-[0.1em] transition-colors ${
+                className={`cursor-pointer border px-3 py-2 font-mono text-[0.6875rem] tracking-[0.1em] transition-colors has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-[3px] has-[:focus-visible]:outline-accent ${
                   active
                     ? "border-accent bg-accent text-surface"
                     : "border-line-strong text-muted hover:border-ink hover:text-ink"
@@ -221,15 +242,48 @@ export function ContactForm() {
         </div>
       </fieldset>
 
+      {/* Honeypot. Positioned off-screen rather than display:none, which the
+          less naive bots know to skip, and hidden from assistive tech. */}
+      <div
+        aria-hidden="true"
+        className="absolute left-[-9999px] h-px w-px overflow-hidden"
+      >
+        <label htmlFor={`${id}-company`}>Company (leave this empty)</label>
+        <input
+          ref={honeypot}
+          id={`${id}-company`}
+          name="company"
+          type="text"
+          tabIndex={-1}
+          autoComplete="off"
+          defaultValue=""
+        />
+      </div>
+
+      {failure ? (
+        <p
+          role="alert"
+          className="mt-6 border border-[#B4392F] bg-[#B4392F]/5 px-4 py-3 text-sm leading-relaxed text-[#B4392F]"
+        >
+          {failure}
+        </p>
+      ) : null}
+
       <div className="mt-8 flex flex-wrap items-center gap-x-5 gap-y-3 border-t border-line pt-6">
         <button
           type="submit"
-          className="group inline-flex items-center gap-2.5 border border-ink bg-ink px-6 py-3.5 font-mono text-xs tracking-[0.14em] text-surface transition-colors hover:border-accent-strong hover:bg-accent-strong"
+          disabled={sending}
+          aria-busy={sending}
+          className="group inline-flex items-center gap-2.5 border border-ink bg-ink px-6 py-3.5 font-mono text-xs tracking-[0.14em] text-surface transition-colors hover:border-accent-strong hover:bg-accent-strong disabled:cursor-not-allowed disabled:border-line-strong disabled:bg-line-strong"
         >
-          INITIALIZE PROJECT
+          {sending ? "SENDING…" : "INITIALIZE PROJECT"}
           <span
             aria-hidden="true"
-            className="transition-transform duration-300 group-hover:translate-x-1"
+            className={
+              sending
+                ? "opacity-0"
+                : "transition-transform duration-300 group-hover:translate-x-1"
+            }
           >
             →
           </span>

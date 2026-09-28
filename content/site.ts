@@ -10,7 +10,7 @@ export const site = {
   tagline:
     "Building thoughtful digital systems, websites, and software for people who need things to actually work.",
   status: "AVAILABLE FOR SELECT PROJECTS",
-  email: "hello@mark-v.dev",
+  email: "markv.dev.systems@gmail.com",
   url: "https://mark-v.dev",
   socials: [
     { label: "GITHUB", href: "https://github.com/", handle: "/mark-v" },

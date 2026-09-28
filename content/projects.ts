@@ -37,7 +37,7 @@ export const projects: Project[] = [
     result:
       "Importers can qualify Beca before they make contact, so the enquiries that arrive start from the route and the cargo rather than from the basics.",
     stack: ["Next.js", "TypeScript", "Tailwind CSS", "Vercel"],
-    link: "https://beca-modern.vercel.app/",
+    link: "https://new-beca.vercel.app/",
     placeholder: "storefront",
   },
   {
@@ -53,6 +53,7 @@ export const projects: Project[] = [
     result:
       "The three fields come off the receipt without anyone reading it, turning a manual transcription step into an upload.",
     stack: ["Python", "Computer Vision", "OCR"],
+    link: "https://github.com/araume/transcan/",
     placeholder: "console",
   },
 ];

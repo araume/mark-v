@@ -5,6 +5,16 @@ import { Parallax } from "@/components/ui/Parallax";
 import { Reveal } from "@/components/ui/Reveal";
 
 /**
+ * Not every project has a site to visit — a shipped binary links to its source
+ * instead, and the button has to say which it is rather than promise a demo.
+ */
+function isRepo(href: string): boolean {
+  return /(^|\.)(github\.com|gitlab\.com|bitbucket\.org)$/.test(
+    URL.parse(href)?.hostname ?? "",
+  );
+}
+
+/**
  * Signature moment 2 of 3.
  *
  * The screenshot and the copy travel at different rates through the viewport,
@@ -94,7 +104,7 @@ export function ProjectCard({ project, flip }: { project: Project; flip: boolean
               rel="noopener noreferrer"
               className="group mt-7 inline-flex items-center gap-2.5 border border-line-strong px-4 py-3 font-mono text-[0.6875rem] tracking-[0.14em] text-ink transition-colors hover:border-ink hover:bg-surface-alt"
             >
-              VISIT LIVE SITE
+              {isRepo(project.link) ? "VIEW SOURCE" : "VISIT LIVE SITE"}
               <span className="sr-only"> — {project.name} (opens in a new tab)</span>
               <span
                 aria-hidden="true"
