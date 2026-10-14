@@ -29,7 +29,16 @@ export function ProjectCard({ project, flip }: { project: Project; flip: boolean
         className={flip ? "lg:order-2" : undefined}
       >
         <Reveal scale={0.96} y={30}>
-          <div className="panel panel-marks aspect-[16/10] overflow-hidden">
+          {/* A real screenshot sets the panel's shape from its own dimensions;
+              the generated visuals are drawn to 16/10 and keep it. */}
+          <div
+            className="panel panel-marks overflow-hidden"
+            style={{
+              aspectRatio: project.image
+                ? `${project.image.width} / ${project.image.height}`
+                : "16 / 10",
+            }}
+          >
             {project.image ? (
               <Image
                 src={project.image.src}
@@ -39,9 +48,9 @@ export function ProjectCard({ project, flip }: { project: Project; flip: boolean
                 sizes="(min-width: 1024px) 50vw, 100vw"
                 className="h-full w-full object-cover"
               />
-            ) : (
+            ) : project.placeholder ? (
               <ProjectVisual variant={project.placeholder} />
-            )}
+            ) : null}
           </div>
         </Reveal>
       </Parallax>
