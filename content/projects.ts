@@ -63,6 +63,11 @@ export const projects: Project[] = [
       "The three fields come off the receipt without anyone reading it, turning a manual transcription step into an upload.",
     stack: ["Python", "Computer Vision", "OCR"],
     link: "https://github.com/araume/transcan/",
-    placeholder: "console",
+    image: {
+      src: "/transcan-preview.png",
+      width: 1120,
+      height: 782,
+      alt: "The TranScan desktop window, titled Receipt OCR Scanner: a folder picker with Browse and Start Scan controls above a finished run, whose results table lists each receipt file alongside the date, phone number, total, and reference number read from it.",
+    },
   },
 ];
